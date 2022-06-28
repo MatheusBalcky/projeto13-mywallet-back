@@ -18,15 +18,18 @@ app.post('/register', async (req, res) =>{
         const { error } = await registerSchema.validateAsync(userToRegister);
         await client.connect(); console.log('Connected successfully to server');
         const db = client.db('myWallet'); const collection = db.collection('users');
+        const emailVerify = await collection.find({ email: req.body.email}).toArray();
+        if (emailVerify.length > 0){
+            throw new Error('Email já existente');
+        }
+
         await collection.insertOne(userToRegister);
-        
 
-
-        res.status(200).send('Ok registrado')
+        res.status(200).send('Registrado no sistema com sucesso');
     } catch (error) { 
-        
-        res.status(400).send('Não foi registrado')
         console.log(error);
+
+        res.status(400).send(`${error}`);
     } finally {
         client.close();
     }
