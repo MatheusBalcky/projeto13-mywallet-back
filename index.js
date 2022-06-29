@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv'; dotenv.config();
 import Joi from 'joi';
 import bcrypt from 'bcrypt';
+import { v4 as uuid } from 'uuid';
+import chalk from 'chalk';
 import { MongoClient } from 'mongodb';
 
 
@@ -16,13 +18,16 @@ app.post('/register', async (req, res) =>{
 
     try {
         const { error } = registerSchema.validate(userToRegister);
-        if(error){  throw new Error('Dados inválidos, preencha os campos corretamente')  };
-
+        if(error){ throw new Error('Dados preenchido incorretamente')  };
+        
+        // & CONNECTING WITH MONGO
         await client.connect(); console.log('Connected successfully to server');
-        const db = client.db('myWallet'); const collection = db.collection('users');
+        const db = client.db('myWallet'); 
+        const collection = db.collection('users');
+        // & CONNECTED...
 
-        const emailVerify = await collection.find({ email: req.body.email}).toArray();
-        if (emailVerify.length > 0){  throw new Error('Email já existente') };
+        const emailVerify = await collection.findOne({ email: req.body.email});
+        if (emailVerify){  throw new Error('Email já existente') };
 
         const passwordCrypted = bcrypt.hashSync(userToRegister.password,10)
 
@@ -42,21 +47,37 @@ app.post('/register', async (req, res) =>{
 
 app.post('/login', async (req, res) =>{
     const userLogin = req.body;
+    const token = uuid();
 
     try { 
-        const { error } = await loginSchema.validateAsync(userLogin);
-        console.log(error)
-        // ! APÓS VALIDAR O INPUT DO USUÁRIO COMO LOGIN, VERIFICAR SE ELE ESTÁ REGISTRADO NO BANCO DE DADOS...
+        const { error } = loginSchema.validate(userLogin);
+        if(error){
+            throw new Error('Dados incorreto')
+        };
+
         await client.connect(); console.log('Connected successfully to server');
-        const db = client.db('myWallet'); const collection = db.collection('users');
-        
+        const db = client.db('myWallet'); 
+        const collUsers = db.collection('users');
+        const collSessions = db.collection('sessions');
 
-        res.status(200).send('Ok logou')
+        const verifyEmail = await collUsers.findOne({ email: userLogin.email});
+        
+        if(!verifyEmail || !bcrypt.compareSync(userLogin.password, verifyEmail.password)){
+            throw new Error('Email ou senha incorretos')
+        };
+        
+        await collSessions.insertOne({
+            userId: verifyEmail._id,
+            token,
+        })
+
+        console.log(chalk.green('Logado'));
+        res.status(200).send(token);
+
     } catch (error) {
+
+        res.status(400).send(`${error}`);
         
-
-
-        res.status(400).send('Deu ruim'); console.log(error);
     } finally {
         client.close();
     }
@@ -76,12 +97,12 @@ app.listen(process.env.PORT_EXPRESS, console.log(`Server online at: http://local
 // & SCHEMAS JOI
 
 const loginSchema = Joi.object({
-    email: Joi.string().pattern(/\S+@\S+\.\S+/).required(),
+    email: Joi.string().email().required(),
     password: Joi.string().pattern(/.{6,21}/).required()
 });
 
 const registerSchema = Joi.object({
-    name: Joi.string().pattern(/^[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ ]+$/).required(),
+    name: Joi.string().pattern(/^[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ ]+$/).min(4).required(),
     email: Joi.string().email().required(),
     password: Joi.string().pattern(/.{6,21}/).required()
 })
