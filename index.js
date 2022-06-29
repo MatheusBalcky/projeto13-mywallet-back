@@ -52,7 +52,7 @@ app.post('/login', async (req, res) =>{
     try { 
         const { error } = loginSchema.validate(userLogin);
         if(error){
-            throw new Error('Dados incorreto')
+            throw ('Dados incorreto')
         };
 
         await client.connect(); console.log('Connected successfully to server');
@@ -63,7 +63,7 @@ app.post('/login', async (req, res) =>{
         const verifyEmail = await collUsers.findOne({ email: userLogin.email});
         
         if(!verifyEmail || !bcrypt.compareSync(userLogin.password, verifyEmail.password)){
-            throw new Error('Email ou senha incorretos')
+            throw ('E-mail ou senha incorretos!')
         };
         
         await collSessions.insertOne({
@@ -72,12 +72,18 @@ app.post('/login', async (req, res) =>{
         })
 
         console.log(chalk.green('Logado'));
-        res.status(200).send(token);
+        res.status(200).send({
+            token,
+            user: {
+                email: verifyEmail.email,
+                name: verifyEmail.name
+            }
+        });
 
     } catch (error) {
 
         res.status(400).send(`${error}`);
-        
+
     } finally {
         client.close();
     }
