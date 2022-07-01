@@ -2,9 +2,9 @@ import db from "../db.js";
 import bcrypt from 'bcrypt';
 import { v4 as uuid } from 'uuid';
 
-
 export async function registerController (req, res){
     const userToRegister = res.locals.userToRegister;
+    console.log(userToRegister)
 
     try {
         const passwordCrypted = bcrypt.hashSync( userToRegister.password, 10 )
@@ -12,6 +12,13 @@ export async function registerController (req, res){
         await db.collection('users').insertOne({
             ...userToRegister,
             password: passwordCrypted
+        });
+
+        const idUser = await db.collection('users').findOne({ email: userToRegister.email})
+
+        await db.collection('entersandouts').insertOne({
+            from: idUser._id,
+            entersandouts: []
         });
 
         res.status(200).send('Registrado no sistema com sucesso');

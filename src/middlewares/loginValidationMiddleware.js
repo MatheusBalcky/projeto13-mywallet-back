@@ -3,8 +3,6 @@ import db from "../db.js";
 import bcrypt from 'bcrypt';
 
 export async function loginValidationMiddleware (req, res, next){
-    console.log('middlelogin...')
-
     const userLogin = req.body;
 
     try { 
