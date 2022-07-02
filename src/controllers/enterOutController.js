@@ -2,7 +2,7 @@ import db from "../db.js";
 import dayjs from "dayjs";
 
 export async function enterController (req, res){
-    console.log('teste de etnrada')
+    console.log('Controle da rota de entrada foi...')
     const bodyEnter = req.body;
     const userSession = res.locals.userSession;
     
@@ -22,11 +22,6 @@ export async function enterController (req, res){
     } catch (error) {
         res.status(400).send(`${error}`)
     }
-
-
-
-    //db.collection('entersandout').findOne({})
-    
 }
 
 export async function outController (req, res){
@@ -50,4 +45,12 @@ export async function outController (req, res){
         res.status(400).send(`${error}`)
     }
 
+}
+
+export async function getEntersAndOutsController (req, res){
+    const userSession = res.locals.userSession;
+
+    const entersAndOuts = await db.collection('entersandouts').findOne({from: userSession.userId});
+    const onlyValue = entersAndOuts.entersandouts;
+    res.status(200).send(onlyValue);
 }

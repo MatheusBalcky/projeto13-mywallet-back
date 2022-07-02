@@ -4,20 +4,21 @@ import { v4 as uuid } from 'uuid';
 
 export async function registerController (req, res){
     const userToRegister = res.locals.userToRegister;
-    console.log(userToRegister)
+    console.log(userToRegister);
 
     try {
-        const passwordCrypted = bcrypt.hashSync( userToRegister.password, 10 )
+        const passwordCrypted = bcrypt.hashSync( userToRegister.password, 10 );
 
         await db.collection('users').insertOne({
             ...userToRegister,
             password: passwordCrypted
         });
 
-        const idUser = await db.collection('users').findOne({ email: userToRegister.email})
+        const idUser = await db.collection('users').findOne({ email: userToRegister.email});
 
         await db.collection('entersandouts').insertOne({
             from: idUser._id,
+            email: idUser.email,
             entersandouts: []
         });
 

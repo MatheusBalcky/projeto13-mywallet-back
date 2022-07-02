@@ -1,15 +1,19 @@
 import  { Router }  from 'express';
 import { registerController, loginController } from '../controllers/authControllers.js';
-import { loginValidationMiddleware } from '../middlewares/loginValidationMiddleware.js';
-import { registerSchemaMiddleWare } from '../middlewares/registerSchemaMiddleware.js';
-import { enterController, outController } from '../controllers/enterOutController.js';
-import { userValidationMiddleware } from '../middlewares/userValidationMiddleware.js';
+import { loginValidationMiddleware, registerValidationMiddleWare } from '../middlewares/authValidationMiddle.js';
+
+import { valuesValidationMiddle } from '../middlewares/valuesValidationMiddle.js';
+import { tokenValidationMiddle } from '../middlewares/tokenValidationMiddle.js';
+
+import { enterController, outController, getEntersAndOutsController } from '../controllers/enterOutController.js';
+
 
 const router = Router();
 
-router.post('/register', registerSchemaMiddleWare, registerController);
+router.post('/register', registerValidationMiddleWare, registerController);
 router.post('/login', loginValidationMiddleware, loginController);
-router.put('/newEnter', userValidationMiddleware, enterController);
-router.put('/newOut', userValidationMiddleware, outController);
+router.get('/home', tokenValidationMiddle, getEntersAndOutsController)
+router.put('/newEnter', tokenValidationMiddle, valuesValidationMiddle, enterController);
+router.put('/newOut', tokenValidationMiddle, valuesValidationMiddle, outController);
 
 export default router;
