@@ -13,7 +13,7 @@ export async function enterController (req, res){
                 $push: { entersandouts: {
                     type: 'enter',
                     ...bodyEnter,
-                    date: dayjs().format('DD/MM/YYYY'),
+                    date: dayjs().format('MM/DD/YYYY'),
                 }}
             });
         
@@ -35,7 +35,7 @@ export async function outController (req, res){
                 $push: { entersandouts: {
                     type: 'out',
                     ...bodyEnter,
-                    date: dayjs().format('DD/MM/YYYY'),
+                    date: dayjs().format('MM/DD/YYYY'),
                 }}
             });
         
