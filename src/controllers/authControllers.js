@@ -38,6 +38,7 @@ export async function loginController (req, res){
         await db.collection('sessions').insertOne({
             userId: verifyEmail._id,
             token,
+            lastStatus: new Date.now()
         })
 
         // & DEVOLVE ALGUNS DADOS NECESSÁRIO LÁ NO FRONT, ALÉM DO TOKEN
